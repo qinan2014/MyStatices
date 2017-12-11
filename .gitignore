@@ -1,0 +1,30 @@
+# Compiled Object files
+*.slo
+*.lo
+*.o
+
+# Compiled Dynamic libraries
+*.so
+*.dylib
+
+# Compiled Static libraries
+*.lai
+*.la
+*.a
+
+
+Debug
+*/Debug
+
+Release
+*/Release
+
+
+*/GeneratedFiles
+*.sdf
+*.suo
+*/*.filters
+*/*.user
+ipch/
+NameStatic.sdf
+

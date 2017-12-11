@@ -1,0 +1,25 @@
+<UI version="4.0" >
+ <class>NameStaticClass</class>
+ <widget class="QDialog" name="NameStaticClass" >
+  <property name="objectName" >
+   <string notr="true">NameStaticClass</string>
+  </property>
+  <property name="geometry" >
+   <rect>
+	<x>0</x>
+	<y>0</y>
+	<width>600</width>
+	<height>400</height>
+   </rect>
+  </property>
+  <property name="windowTitle" >
+   <string>NameStatic</string>
+  </property>
+ </widget>
+ <layoutDefault spacing="6" margin="11" />
+ <pixmapfunction></pixmapfunction>
+ <resources>
+   <include location="namestatic.qrc"/>
+ </resources>
+ <connections/>
+</UI>

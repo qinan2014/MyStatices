@@ -1,4 +1,4 @@
-#include "namestatic.h"
+ï»¿#include "namestatic.h"
 
 NameStatic::NameStatic(QWidget *parent)
 	: QDialog(parent)
@@ -15,17 +15,17 @@ NameStatic::~NameStatic()
 void NameStatic::readNameText()
 {
 #define LINELEN 1024
-	char filename[] = "E:\\QADoc\\Study\\MyNameStatic\\names.txt"; //ÎÄ¼şÃû
+	char filename[] = "E:\\QADoc\\Study\\MyNameStatices\\names.txt"; //æ–‡ä»¶å
 	FILE *fp; 
-	char StrLine[LINELEN];             //Ã¿ĞĞ×î´ó¶ÁÈ¡µÄ×Ö·ûÊı
-	if((fp = fopen(filename,"r")) == NULL) //ÅĞ¶ÏÎÄ¼şÊÇ·ñ´æÔÚ¼°¿É¶Á
+	char StrLine[LINELEN];             //æ¯è¡Œæœ€å¤§è¯»å–çš„å­—ç¬¦æ•°
+	if((fp = fopen(filename,"r")) == NULL) //åˆ¤æ–­æ–‡ä»¶æ˜¯å¦å­˜åœ¨åŠå¯è¯»
 	{ 
 		return; 
 	} 
 
 	while (!feof(fp)) 
 	{ 
-		fgets(StrLine,LINELEN,fp);  //¶ÁÈ¡Ò»ĞĞ
+		fgets(StrLine,LINELEN,fp);  //è¯»å–ä¸€è¡Œ
 		analyzeDate(StrLine);
 	} 
 	fclose(fp);
@@ -34,35 +34,138 @@ void NameStatic::readNameText()
 
 inline void NameStatic::analyzeDate(char namesdata[])
 {
-	// È¥µô×îÇ°ÃæµÄ¿Õ¸ñ
-	std::wstring namew = StringToWstring(namesdata);
-	std::wstring flagdata = L"µã";
-
-	int datalen = namew.length();
+	// å»æ‰æœ€å‰é¢çš„ç©ºæ ¼
+	int datalen = strlen(namesdata);
 	int datapos = 0;
 	for (int i = 0; i < datalen; ++i)
 	{
-		wchar_t tmpdata = namew[i];
-		if (tmpdata == flagdata[0])
+		char tmpdata = namesdata[i];
+		if (namesdata[i] != ' ')
 		{
 			datapos = i;
+			break;
 		}
+	}
+	if (is2017year(namesdata))
+	{
+		std::wstring lines = StringToWstring(namesdata + datapos);
+		std::wstring flagdata = L"ç‚¹";
+		// å»é™¤æ—¶é—´
+		int timepos = 0;
+		int linelen = lines.length();
+		for (int i = 0; i < linelen; ++i)
+		{
+			if (lines[i] == flagdata[0])
+			{
+				timepos = i;
+				break;
+			}
+		}
+		// ä»timepos + 1çš„ä½ç½®å¼€å§‹æ˜¯äººå
+		// ä»¥ç©ºæ ¼ä¸ºäººåé—´éš”ç¬¦
+		int beginSearchNamePos = timepos + 1;
+		wchar_t *namesLine = new wchar_t[linelen - beginSearchNamePos];
+		int nameslineAdapterIndex = 0;
+		for (int i = beginSearchNamePos; i < linelen; ++i)
+		{
+			namesLine[nameslineAdapterIndex] = lines[i];
+			if (!isNameChar(namesLine[nameslineAdapterIndex]))
+				namesLine[nameslineAdapterIndex] = ' ';
+			++nameslineAdapterIndex;
+		}
+		namesLine[nameslineAdapterIndex] = 0;
+		dicomposeNameLine(namesLine);
+		delete []namesLine;
 	}
 }
 
+void NameStatic::dicomposeNameLine(wchar_t *pNameLine)
+{
+	int linelen = wcslen(pNameLine);
+	int nameEndpos = 0;
+	while (nameEndpos < linelen)
+	{
+		wchar_t nameToGet[NAMELEN];
+		int tmpendpos = getFirstName(pNameLine + nameEndpos, nameToGet);
+		if (tmpendpos == 0)
+			break;
+		nameEndpos += tmpendpos;
+	}
+}
+
+int NameStatic::getFirstName(wchar_t *pNameLine, wchar_t outName[])
+{
+	int nameBeginPos = 0;
+	int linelen = wcslen(pNameLine);
+	for (int i = 0; i < linelen; ++i)
+	{
+		if (pNameLine[i] != ' ')
+		{
+			nameBeginPos = i;
+			break;
+		}
+	}
+	int nameIndex = 0;
+	int nameEndPos = 0;
+	for (int i = nameBeginPos; i < nameBeginPos + 4; ++i)
+	{
+		outName[nameIndex] = pNameLine[i];
+		if (outName[nameIndex] == ' ')
+		{
+			outName[nameIndex] = 0;
+			nameEndPos = i;
+			break;
+		}
+		++nameIndex;
+	}
+	return nameEndPos;
+}
+
+bool NameStatic::is2017year(char namesline[])
+{
+	const char *yearchar = "2017";
+	bool isyear2017 = true;
+	for (int i = 0; i < 4; ++i)
+	{
+		if (namesline[i] != yearchar[i])
+		{
+			isyear2017 = false;
+			break;
+		}
+	}
+	return isyear2017;
+}
+
+bool NameStatic::isNameChar(wchar_t pchar)
+{
+	bool isName = true;
+	static std::wstring flagdata = L"ï¼Œè½¦åœºå‚å ‚å†…ï¼šå¤–é¢ï¼›";
+	static int flaglen = flagdata.length();
+	for (int i = 0; i < flaglen; ++i)
+	{
+		if (pchar == flagdata[i])
+		{
+			isName = false;
+			break;
+		}
+	}
+
+	return isName;
+}
+
 std::wstring NameStatic::StringToWstring(const std::string str)
-{// string×ªwstring
-	unsigned len = str.size() * 2;// Ô¤Áô×Ö½ÚÊı
-	setlocale(LC_CTYPE, "");     //±ØĞëµ÷ÓÃ´Ëº¯Êı
-	wchar_t *p = new wchar_t[len];// ÉêÇëÒ»¶ÎÄÚ´æ´æ·Å×ª»»ºóµÄ×Ö·û´®
-	mbstowcs(p,str.c_str(),len);// ×ª»»
+{// stringè½¬wstring
+	unsigned len = str.size() * 2;// é¢„ç•™å­—èŠ‚æ•°
+	setlocale(LC_CTYPE, "");     //å¿…é¡»è°ƒç”¨æ­¤å‡½æ•°
+	wchar_t *p = new wchar_t[len];// ç”³è¯·ä¸€æ®µå†…å­˜å­˜æ”¾è½¬æ¢åçš„å­—ç¬¦ä¸²
+	mbstowcs(p,str.c_str(),len);// è½¬æ¢
 	std::wstring str1(p);
-	delete[] p;// ÊÍ·ÅÉêÇëµÄÄÚ´æ
+	delete[] p;// é‡Šæ”¾ç”³è¯·çš„å†…å­˜
 	return str1;
 }
 
 std::string NameStatic::WstringToString(const std::wstring str)
-{// wstring×ªstring
+{// wstringè½¬string
 	unsigned len = str.size() * 4;
 	setlocale(LC_CTYPE, "");
 	char *p = new char[len];

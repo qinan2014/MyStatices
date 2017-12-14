@@ -15,7 +15,7 @@ NameStatic::~NameStatic()
 void NameStatic::readNameText()
 {
 #define LINELEN 1024
-	char filename[] = "E:\\QADoc\\Study\\MyNameStatices\\names.txt"; //文件名
+	char filename[] = "D:\\QinAn\\CompanyProgram\\GitTest\\MyNameStatices\\names.txt"; //文件名
 	FILE *fp; 
 	char StrLine[LINELEN];             //每行最大读取的字符数
 	if((fp = fopen(filename,"r")) == NULL) //判断文件是否存在及可读
@@ -30,6 +30,49 @@ void NameStatic::readNameText()
 	} 
 	fclose(fp);
 #undef LINELEN
+	printStatics();
+}
+
+void NameStatic::readServerPositionNames()
+{
+#define LINELEN 1024
+	char filename[] = "services_persion_names.txt"; //文件名
+	FILE *fp; 
+	char StrLine[LINELEN];             //每行最大读取的字符数
+	if((fp = fopen(filename,"r")) == NULL) //判断文件是否存在及可读
+	{ 
+		return; 
+	} 
+
+	while (!feof(fp)) 
+	{ 
+		fgets(StrLine,LINELEN,fp);  //读取一行
+		addServiceName(StrLine);
+	} 
+	fclose(fp);
+#undef LINELEN
+}
+
+void NameStatic::addServiceName(char namesdata[])
+{
+
+}
+
+void NameStatic::printStatics()
+{
+	FILE * fp = NULL;
+	if((fp = fopen("staticsResult.txt", "a")) != NULL)
+	{
+		int namesz = allNames.size();
+		std::string tmpName;
+		for (int i = 0; i < namesz; ++i)
+		{
+			tmpName = WstringToString(allNames[i].personName[0]);
+			fwrite(tmpName.c_str(), tmpName.length(), 1, fp);
+			fwrite("\r\n", strlen("\r\n"), 1, fp);
+		}
+		fclose(fp);
+	}
 }
 
 inline void NameStatic::analyzeDate(char namesdata[])
@@ -64,7 +107,7 @@ inline void NameStatic::analyzeDate(char namesdata[])
 		// 从timepos + 1的位置开始是人名
 		// 以空格为人名间隔符
 		int beginSearchNamePos = timepos + 1;
-		wchar_t *namesLine = new wchar_t[linelen - beginSearchNamePos];
+		wchar_t namesLine[512];
 		int nameslineAdapterIndex = 0;
 		for (int i = beginSearchNamePos; i < linelen; ++i)
 		{
@@ -75,7 +118,6 @@ inline void NameStatic::analyzeDate(char namesdata[])
 		}
 		namesLine[nameslineAdapterIndex] = 0;
 		dicomposeNameLine(namesLine);
-		delete []namesLine;
 	}
 }
 
@@ -90,7 +132,23 @@ void NameStatic::dicomposeNameLine(wchar_t *pNameLine)
 		if (tmpendpos == 0)
 			break;
 		nameEndpos += tmpendpos;
+		staticNames(nameToGet);
 	}
+}
+
+void NameStatic::staticNames(wchar_t inName[])
+{
+	// 首先查看内存中是否存在这个名字
+	int namesz = allNames.size();
+	for (int i = 0; i < namesz; ++i)
+	{
+		if (allNames[i].isEqualName(inName))
+		{
+			++allNames[i].serviceTimes;
+			return;
+		}
+	}
+	allNames.push_back(PositionInPosName(inName));
 }
 
 int NameStatic::getFirstName(wchar_t *pNameLine, wchar_t outName[])
@@ -139,7 +197,7 @@ bool NameStatic::is2017year(char namesline[])
 bool NameStatic::isNameChar(wchar_t pchar)
 {
 	bool isName = true;
-	static std::wstring flagdata = L"，车场厂堂内：外面；";
+	static std::wstring flagdata = L"，车场厂膛堂内里：外面；";
 	static int flaglen = flagdata.length();
 	for (int i = 0; i < flaglen; ++i)
 	{

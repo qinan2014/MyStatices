@@ -10,28 +10,72 @@ class NameStatic : public QDialog
 
 public:
 #define NAMELEN 4
-	struct StaticName 
+#define NAMESCOUNT 4
+	struct PositionInPosName 
 	{
-		wchar_t standname[NAMELEN];
-		wchar_t logoname1[NAMELEN];
-		wchar_t logoname2[NAMELEN];
-		wchar_t logoname3[NAMELEN];
+		wchar_t personName[NAMESCOUNT][NAMELEN];
 		short serviceTimes;
+
+		PositionInPosName(wchar_t inName[NAMELEN])
+		{
+			int namalen = wcslen(inName);
+			if (namalen > NAMELEN)
+				namalen = NAMELEN;
+			for (int i = 0; i < namalen; ++i)
+			{
+				personName[0][i] = inName[i];
+			}
+			personName[0][namalen] = 0;
+			serviceTimes = 1;
+			for (int i = 1; i < NAMESCOUNT; ++i)
+			{
+				personName[i][0] = 0;
+			}
+		}
+
+		bool isEqualName(wchar_t inName[NAMELEN])
+		{
+			int namelen = wcslen(inName);
+			if (namelen > NAMELEN)
+				namelen = NAMELEN;
+			for (int i = 0; i < NAMESCOUNT; ++i)
+			{
+				bool isEqualThisName = true;
+				for (int j = 0; j < namelen; ++j)
+				{
+					if (personName[i][j] != inName[j])
+					{
+						isEqualThisName = false;
+						break;
+					}
+				}
+				if (isEqualThisName)
+					return true;
+			}
+			return false;
+		}
 	};
 	NameStatic(QWidget *parent = 0);
 	~NameStatic();
 
 private:
 	Ui::NameStaticClass ui;
-	std::vector<StaticName> allNames;
+	std::vector<PositionInPosName> allNames;
+
+	void readServerPositionNames();
+	void addServiceName(char namesdata[]);
+
 
 	void readNameText();
 	inline void analyzeDate(char namesdata[]);
 	bool is2017year(char namesline[]);
 	bool isNameChar(wchar_t pchar);
 
+	void printStatics();
+
 	void dicomposeNameLine(wchar_t *pNameLine);
 	int getFirstName(wchar_t *pNameLine, wchar_t outName[]); // 返回第一个名字的结尾index
+	void staticNames(wchar_t inName[]);
 
 	std::wstring StringToWstring(const std::string str);
 	std::string WstringToString(const std::wstring str);

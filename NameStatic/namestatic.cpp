@@ -4,6 +4,7 @@ NameStatic::NameStatic(QWidget *parent)
 	: QDialog(parent)
 {
 	ui.setupUi(this);
+	readServerPositionNames();
 	readNameText();
 }
 
@@ -55,21 +56,62 @@ void NameStatic::readServerPositionNames()
 
 void NameStatic::addServiceName(char namesdata[])
 {
+	// 去掉最前面的空格
+	int datalen = strlen(namesdata);
+	int datapos = 0;
+	for (int i = 0; i < datalen; ++i)
+	{
+		char tmpdata = namesdata[i];
+		if (namesdata[i] != ' ')
+		{
+			datapos = i;
+			break;
+		}
+	}
 
+	std::wstring lines = StringToWstring(namesdata + datapos);
+	int linelen = lines.length();
+	wchar_t namesLine[512];
+	for (int i = 0; i < linelen; ++i)
+	{
+		namesLine[i] = lines[i];
+	}
+	namesLine[linelen] = 0;
+
+	int nameEndpos = 0;
+	allNames.push_back(PositionInPosName(L""));
+	PositionInPosName &tmpName = allNames[allNames.size() - 1];
+	int nameIndex = 0;
+	while (nameEndpos < linelen)
+	{
+		wchar_t nameToGet[NAMELEN];
+		int tmpendpos = getFirstName(namesLine + nameEndpos, nameToGet);
+		tmpName.setName(nameIndex, nameToGet);
+		if (tmpendpos == 0)
+			break;
+		nameEndpos += tmpendpos;
+		++nameIndex;
+	}
 }
 
 void NameStatic::printStatics()
 {
 	FILE * fp = NULL;
-	if((fp = fopen("staticsResult.txt", "a")) != NULL)
+	if((fp = fopen("staticsResult.txt", "w")) != NULL)
 	{
 		int namesz = allNames.size();
 		std::string tmpName;
+		char tmpbuf[512];
 		for (int i = 0; i < namesz; ++i)
 		{
-			tmpName = WstringToString(allNames[i].personName[0]);
-			fwrite(tmpName.c_str(), tmpName.length(), 1, fp);
-			fwrite("\r\n", strlen("\r\n"), 1, fp);
+			if (wcslen(allNames[i].personName[0]) > 0)
+			{
+				tmpName = WstringToString(allNames[i].personName[0]);
+				fwrite(tmpName.c_str(), tmpName.length(), 1, fp);
+				sprintf(tmpbuf, "       %d次", allNames[i].serviceTimes);
+				fwrite(tmpbuf, strlen(tmpbuf), 1, fp);
+				fwrite("\r\n", strlen("\r\n"), 1, fp);
+			}
 		}
 		fclose(fp);
 	}
@@ -105,7 +147,7 @@ inline void NameStatic::analyzeDate(char namesdata[])
 			}
 		}
 		// 从timepos + 1的位置开始是人名
-		// 以空格为人名间隔符
+		// 以空格为人名间隔符，将人名无关字符换成空格
 		int beginSearchNamePos = timepos + 1;
 		wchar_t namesLine[512];
 		int nameslineAdapterIndex = 0;
@@ -114,6 +156,8 @@ inline void NameStatic::analyzeDate(char namesdata[])
 			namesLine[nameslineAdapterIndex] = lines[i];
 			if (!isNameChar(namesLine[nameslineAdapterIndex]))
 				namesLine[nameslineAdapterIndex] = ' ';
+			if (namesLine[nameslineAdapterIndex] == '\r' || namesLine[nameslineAdapterIndex] == '\n')
+				namesLine[nameslineAdapterIndex] = 0;
 			++nameslineAdapterIndex;
 		}
 		namesLine[nameslineAdapterIndex] = 0;
@@ -129,10 +173,10 @@ void NameStatic::dicomposeNameLine(wchar_t *pNameLine)
 	{
 		wchar_t nameToGet[NAMELEN];
 		int tmpendpos = getFirstName(pNameLine + nameEndpos, nameToGet);
+		staticNames(nameToGet);
 		if (tmpendpos == 0)
 			break;
 		nameEndpos += tmpendpos;
-		staticNames(nameToGet);
 	}
 }
 
@@ -168,7 +212,7 @@ int NameStatic::getFirstName(wchar_t *pNameLine, wchar_t outName[])
 	for (int i = nameBeginPos; i < nameBeginPos + 4; ++i)
 	{
 		outName[nameIndex] = pNameLine[i];
-		if (outName[nameIndex] == ' ')
+		if (outName[nameIndex] == ' ' || outName[nameIndex] == '\r' || outName[nameIndex] == '\n')
 		{
 			outName[nameIndex] = 0;
 			nameEndPos = i;
@@ -197,7 +241,7 @@ bool NameStatic::is2017year(char namesline[])
 bool NameStatic::isNameChar(wchar_t pchar)
 {
 	bool isName = true;
-	static std::wstring flagdata = L"，车场厂膛堂内里：外面；";
+	static std::wstring flagdata = L"，车场厂膛堂内里：外面；、。前边后";
 	static int flaglen = flagdata.length();
 	for (int i = 0; i < flaglen; ++i)
 	{

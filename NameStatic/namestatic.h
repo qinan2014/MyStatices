@@ -10,7 +10,7 @@ class NameStatic : public QDialog
 
 public:
 #define NAMELEN 4
-#define NAMESCOUNT 4
+#define NAMESCOUNT 6
 	struct PositionInPosName 
 	{
 		wchar_t personName[NAMESCOUNT][NAMELEN];
@@ -31,6 +31,18 @@ public:
 			{
 				personName[i][0] = 0;
 			}
+		}
+
+		void setName(int pIndex, wchar_t inName[NAMELEN])
+		{
+			int namalen = wcslen(inName);
+			if (namalen > NAMELEN)
+				namalen = NAMELEN;
+			for (int i = 0; i < namalen; ++i)
+			{
+				personName[pIndex][i] = inName[i];
+			}
+			personName[pIndex][namalen] = 0;
 		}
 
 		bool isEqualName(wchar_t inName[NAMELEN])

@@ -31,7 +31,8 @@ void NameStatic::readNameText()
 	} 
 	fclose(fp);
 #undef LINELEN
-	printStatics();
+	//printStatics();
+	printStaticsByOrder();
 }
 
 void NameStatic::readServerPositionNames()
@@ -81,6 +82,7 @@ void NameStatic::addServiceName(char namesdata[])
 	int nameEndpos = 0;
 	allNames.push_back(PositionInPosName(L""));
 	PositionInPosName &tmpName = allNames[allNames.size() - 1];
+	tmpName.serviceTimes = 0;
 	int nameIndex = 0;
 	while (nameEndpos < linelen)
 	{
@@ -111,6 +113,33 @@ void NameStatic::printStatics()
 				sprintf(tmpbuf, "       %d次", allNames[i].serviceTimes);
 				fwrite(tmpbuf, strlen(tmpbuf), 1, fp);
 				fwrite("\r\n", strlen("\r\n"), 1, fp);
+			}
+		}
+		fclose(fp);
+	}
+}
+
+// 最多次数50；最低次数0次，排序打印
+void NameStatic::printStaticsByOrder()
+{
+	FILE * fp = NULL;
+	if((fp = fopen("staticsResult.txt", "w")) != NULL)
+	{
+		int namesz = allNames.size();
+		std::string tmpName;
+		char tmpbuf[512];
+		for (int m = 50; m > 0; --m)
+		{
+			for (int i = 0; i < namesz; ++i)
+			{
+				if (allNames[i].serviceTimes == m)
+				{
+					tmpName = WstringToString(allNames[i].personName[0]);
+					fwrite(tmpName.c_str(), tmpName.length(), 1, fp);
+					sprintf(tmpbuf, "       %d次", allNames[i].serviceTimes);
+					fwrite(tmpbuf, strlen(tmpbuf), 1, fp);
+					fwrite("\r\n", strlen("\r\n"), 1, fp);
+				}
 			}
 		}
 		fclose(fp);

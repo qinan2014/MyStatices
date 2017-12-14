@@ -84,6 +84,7 @@ private:
 	bool isNameChar(wchar_t pchar);
 
 	void printStatics();
+	void printStaticsByOrder();
 
 	void dicomposeNameLine(wchar_t *pNameLine);
 	int getFirstName(wchar_t *pNameLine, wchar_t outName[]); // 返回第一个名字的结尾index
